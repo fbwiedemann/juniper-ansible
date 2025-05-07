@@ -1,0 +1,44 @@
+---
+- name: Backup config
+  hosts:
+    all
+  #connection: local
+  connection: juniper.device.pyez
+  gather_facts: no
+  vars:
+    port:
+      "22"
+    host: "{{ inventory_hostname }}"
+
+  tasks:
+    - name: Verify netconf
+      wait_for:
+        host: "{{ inventory_hostname }}"
+        port: 830
+        timeout: 5
+
+    - name: Retrieve the committed configuration in 'text' format
+      juniper.device.config:
+        retrieve: "committed"
+        format: "text"
+        dest: "{{ playbook_dir }}/config_backup/conf/{{ inventory_hostname }}.conf"
+        diff: false
+        check: false
+        commit: false
+      register: response
+
+    - name: Retrieve the committed configuration in 'set' format
+      juniper.device.config:
+        retrieve: "committed"
+        format: "set"
+        dest: "{{ playbook_dir }}/config_backup/set/{{ inventory_hostname }}.txt"
+        diff: false
+        check: false
+        commit: false
+      register: response
+      when:
+        - "'ex2200' not in group_names"
+        - "'wsk8_ex2200' not in group_names"
+        - "'ex4500' not in group_names"
+        - "'ex3300' not in group_names"
+#      when: "'ex2200' not in group_names"
