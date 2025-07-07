@@ -1,0 +1,23 @@
+---
+- name: Change Juniper hostname
+  hosts: juniper_devices
+  connection: netconf
+  gather_facts: no
+  vars:
+    new_hostname: "{{ hostname | default('new-juniper-device') }}"
+  
+  tasks:
+    - name: Configure hostname
+      junipernetworks.junos.junos_config:
+        lines:
+          - "set system host-name {{ new_hostname }}"
+        comment: "Changed hostname via Ansible"
+      
+    - name: Commit configuration
+      junipernetworks.junos.junos_config:
+        comment: "Hostname change committed"
+        confirm_commit: yes
+      
+    - name: Display new hostname
+      debug:
+        msg: "Hostname changed to: {{ new_hostname }}"
