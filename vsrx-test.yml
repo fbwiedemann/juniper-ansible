@@ -1,6 +1,6 @@
 ---
 - name: vSRX Playbook
-  hosts: srx
+  hosts: all
   gather_facts: no
 
   collections:
