@@ -1,6 +1,6 @@
 ---
 - name: Change Juniper hostname
-  hosts: juniper_devices
+  hosts: all
   connection: netconf
   gather_facts: no
   vars:
