@@ -1,7 +1,7 @@
 ---
 - name: Change Juniper hostname
   hosts: all
-  connection: netconf
+  connection: juniper.device.pyez
   gather_facts: no
   vars:
     new_hostname: "{{ hostname | default('new-juniper-device') }}"
