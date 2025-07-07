@@ -1,0 +1,62 @@
+---
+- name: vSRX Playbook
+  hosts: srx
+  gather_facts: no
+
+  collections:
+    - junipernetworks.junos
+
+  tasks:
+    - name: Time Zone
+      junipernetworks.junos.junos_config:
+        lines:
+        - set system time-zone Europe/London
+      tags: ntp
+
+    - name: Hostname
+      junipernetworks.junos.junos_hostname:
+        config:
+          hostname: 'branch_srx'
+      tags:
+      - system
+
+    - name: L3 Interfaces
+      junipernetworks.junos.junos_l3_interfaces:
+        config:
+        - name: "{{ item.name }}"
+          ipv4:
+          - address: "{{ item.ip }}"
+      with_items: "{{ interfaces }}"
+      tags:
+      - l3
+    
+    - name: Static Routes
+      junipernetworks.junos.junos_static_routes:
+        config:
+        - address_families:
+          - afi: ipv4
+            routes:
+            - dest: 0.0.0.0/0
+              next_hop:
+              - forward_router_address: 116.85.10.6
+      tags:
+      - route
+    
+    - name: Security Zones and Allow Ping
+      junipernetworks.junos.junos_config:
+        lines:
+        - set security zones security-zone "{{ item.zone }}" interfaces "{{ item.name }}" host-inbound-traffic system-services ping
+      with_items: "{{ interfaces }}"
+      tags:
+      - l3
+
+    - name: Source NAT
+      junipernetworks.junos.junos_config:
+        lines:
+        - set security nat source rule-set users_to_wan from zone users
+        - set security nat source rule-set users_to_wan to zone wan
+        - set security nat source rule-set users_to_wan rule snat_pat match source-address 10.16.1.0/24
+        - set security nat source rule-set users_to_wan rule snat_pat match destination-address 0.0.0.0/0
+        - set security nat source rule-set users_to_wan rule snat_pat then source-nat interface
+      tags:
+      - nat
